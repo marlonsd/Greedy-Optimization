@@ -33,15 +33,40 @@ from sklearn.cross_validation import train_test_split
 
 from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2
 
+def datasetReduction(X_train, y_train, m):
+    choice = True
+    count = 0
+
+    aux_set = range(len(y_train))
+    set_reduction = []
+
+    while (count < m):
+        pos = np.random.choice(aux_set)
+        if y_train[pos] == int(choice):
+            set_reduction.append(pos)
+            choice = not choice
+            count += 1
+
+    np.random.shuffle(set_reduction)
+    return X_train[set_reduction], y_train[set_reduction]
+
+
 '''
 Main function. This function is responsible for training and testing.
 '''
-def learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test):
+def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m):
     accuracies = defaultdict(lambda: [])
     aucs = defaultdict(lambda: [])    
     
+    np.random.seed(42)
+
     for t in range(num_trials):
-        
+        if m > 0:
+            X_pool, y_pool = datasetReduction(X_train, y_train, m)
+        else:
+            X_pool = X_train
+            y_pool = y_train
+
         print "trial", t
 
         # Gaussian Naive Bayes requires denses matrizes
@@ -82,7 +107,7 @@ def learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, bo
         while (condition):
             if strategy == 's2':
                 it+=1
-                condition = it < budget
+                condition = it < budget and len(pool) > step_size
             else:
               condition = len(trainIndices) < budget and len(pool) > step_size
 
@@ -99,7 +124,7 @@ def learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, bo
                     newIndices = active_s.chooseNext(pool, X_pool_csr, model, k = step_size, current_train_indices = trainIndices, current_train_y = y_pool[trainIndices])
                 
                 pool.difference_update(newIndices)
-                
+
                 if strategy == 's2':
                     indices = set(trainIndices)
                     indices.difference_update(newIndices)
@@ -189,6 +214,10 @@ if (__name__ == '__main__'):
     parser.add_argument("-sp", '--subpool', default=250, type=int,
                         help='Sets the sub pool size (default: 250).')
 
+    # Set reduction
+    parser.add_argument("-m", default=0, type=int,
+                        help='Sets size of the reduction to be done in the dataset, expects a integer positive value (default: No reduction).')
+
 
     # Parsing args
     args = parser.parse_args()
@@ -251,11 +280,13 @@ if (__name__ == '__main__'):
     
     num_test = X_test.shape[0]
 
+    m = args.m
+
     # Main Loop
     for strategy in strategies:
         t0 = time()
 
-        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test)
+        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m)
 
         duration[strategy] = time() - t0
 

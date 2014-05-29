@@ -343,9 +343,9 @@ class Strategy1(BaseStrategy):
             new_classifier.fit(X[new_train_inds], new_train_y)
 
             if (self.classifier) == type(GaussianNB()):
-                    new_probs = new_classifier.predict_proba(X_test.toarray())
-                else:
-                    new_probs = new_classifier.predict_proba(X_test)
+                new_probs = new_classifier.predict_proba(X_test.toarray())
+            else:
+                new_probs = new_classifier.predict_proba(X_test)
 
             # compute utility # CHEATING 2
             if self.option == 'log':
@@ -435,9 +435,9 @@ class Strategy2(BaseStrategy):
             new_classifier.fit(X[new_train_inds], new_train_y)
 
             if (self.classifier) == type(GaussianNB()):
-                    new_probs = new_classifier.predict_proba(X_test.toarray())
-                else:
-                    new_probs = new_classifier.predict_proba(X_test)
+                new_probs = new_classifier.predict_proba(X_test.toarray())
+            else:
+                new_probs = new_classifier.predict_proba(X_test)
 
             # compute utility # CHEATING 2
             if self.option == 'log':
