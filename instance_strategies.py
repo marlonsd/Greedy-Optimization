@@ -10,8 +10,10 @@ import math
 import numpy as np
 import sys
 from collections import defaultdict
-
+from sklearn import metrics
 import scipy.sparse as ss
+
+from sklearn.naive_bayes import GaussianNB
 
 class RandomBootstrap(object):
     def __init__(self, seed):
@@ -314,7 +316,7 @@ class Strategy1(BaseStrategy):
 
         num_candidates = len(pool)
         
-        if self.sub_pool is not None:
+        if self.sub_pool is not None and len(pool) > self.sub_pool:
             num_candidates = self.sub_pool
         
         list_pool = list(pool)
@@ -338,14 +340,15 @@ class Strategy1(BaseStrategy):
             
             new_train_y = list(current_train_y)
             new_train_y.append(self.y_pool[candidates[i]]) # check this # CHEATING 1
+            # print self.y_pool[candidates[i]]
             
             new_classifier = self.classifier(**self.classifier_args)
             new_classifier.fit(X[new_train_inds], new_train_y)
 
             if (self.classifier) == type(GaussianNB()):
-                new_probs = new_classifier.predict_proba(X_test.toarray())
+                new_probs = new_classifier.predict_proba(self.X_test.toarray())
             else:
-                new_probs = new_classifier.predict_proba(X_test)
+                new_probs = new_classifier.predict_proba(self.X_test)
 
             # compute utility # CHEATING 2
             if self.option == 'log':
@@ -357,6 +360,8 @@ class Strategy1(BaseStrategy):
             # OR AUC on the test
                 auc = metrics.roc_auc_score(self.y_test, new_probs[:,1])
                 util = auc
+                # print len(new_probs[:,1])
+                # print util
 
             elif self.option == 'accu':
             # OR accuracy on the test
@@ -366,13 +371,16 @@ class Strategy1(BaseStrategy):
                 util = accu    
             
             utils.append(util)
-        
-        uis = np.argsort(utils)
-        
-        
-        chosen = [candidates[i] for i in uis[:k]]
+        # print
 
-        # print chosen
+        # print utils
+        uis = np.argsort(utils)
+        if not self.option == 'log':
+            uis = uis[::-1]
+
+        chosen = [candidates[i] for i in uis[:k]]
+        # print
+        # print self.X_test.shape[0], len(self.y_test)
 
         # sys.exit()
         
@@ -406,7 +414,7 @@ class Strategy2(BaseStrategy):
     def chooseNext(self, pool, X=None, model=None, k=1, current_train_indices = None, current_train_y = None):
         num_candidates = len(pool)
         
-        if self.sub_pool is not None:
+        if self.sub_pool is not None and len(pool) > self.sub_pool:
             num_candidates = self.sub_pool
         
         list_pool = list(pool)
@@ -435,9 +443,9 @@ class Strategy2(BaseStrategy):
             new_classifier.fit(X[new_train_inds], new_train_y)
 
             if (self.classifier) == type(GaussianNB()):
-                new_probs = new_classifier.predict_proba(X_test.toarray())
+                new_probs = new_classifier.predict_proba(self.X_test.toarray())
             else:
-                new_probs = new_classifier.predict_proba(X_test)
+                new_probs = new_classifier.predict_proba(self.X_test)
 
             # compute utility # CHEATING 2
             if self.option == 'log':
@@ -459,7 +467,8 @@ class Strategy2(BaseStrategy):
             utils.append(util)
         
         uis = np.argsort(utils)
-        uis = uis[::-1]
+        if self.option == 'log':
+            uis = uis[::-1]
 
         chosen = [candidates[i] for i in uis[:k]]
 

@@ -33,6 +33,15 @@ from sklearn.cross_validation import train_test_split
 
 from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2
 
+def inVector(vector, value):
+
+    try:
+        a = vector.index(value)
+        return True
+    except:
+        return False
+
+
 def datasetReduction(X_train, y_train, m):
     choice = True
     count = 0
@@ -42,7 +51,7 @@ def datasetReduction(X_train, y_train, m):
 
     while (count < m):
         pos = np.random.choice(aux_set)
-        if y_train[pos] == int(choice):
+        if y_train[pos] == int(choice) and not inVector(set_reduction, pos):
             set_reduction.append(pos)
             choice = not choice
             count += 1
@@ -93,12 +102,10 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         elif strategy == 'unc':
             active_s = UncStrategy(seed=t, sub_pool=sub_pool)
         elif strategy == 's1':
-            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'log')
+            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'auc')
         elif strategy == 's2':
-            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'log')
+            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'auc')
             it = -1
-            trainIndices = range(X_pool.shape[0])
-
         
         model = None
 
@@ -126,9 +133,7 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 pool.difference_update(newIndices)
 
                 if strategy == 's2':
-                    indices = set(trainIndices)
-                    indices.difference_update(newIndices)
-                    trainIndices = list(indices)
+                    trainIndices = list(pool)
                 else:
                     trainIndices.extend(newIndices)
 
@@ -358,6 +363,8 @@ if (__name__ == '__main__'):
         if filename:
             doc.write(strategy+'\n'+'accuracy'+'\n')
             doc.write('train size,mean,standard deviation,standard error'+'\n')
+            print len(values),len(y), len(z), len(e)
+            print
             for i in range(len(y)):
                 doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
             doc.write('\n')
