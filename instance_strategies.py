@@ -1,11 +1,3 @@
-'''
-Created on Jan 28, 2014
-
-@author: mbilgic
-
-For now, the program is handling just binary classification
-'''
-
 import math
 import numpy as np
 import sys
@@ -411,17 +403,15 @@ class Strategy2(BaseStrategy):
 
 
     def chooseNext(self, pool, X=None, model=None, k=1, current_train_indices = None, current_train_y = None):
-        num_candidates = len(pool)
+        num_candidates = len(current_train_indices)
         
-        if self.sub_pool is not None and len(pool) > self.sub_pool:
+        if self.sub_pool is not None and num_candidates > self.sub_pool:
             num_candidates = self.sub_pool
         
-        list_pool = list(pool)
         
+        #random indices
+        rand_indices = self.randgen.permutation(len(current_train_indices))
         
-        #random candidates
-        rand_indices = self.randgen.permutation(len(pool))                
-        candidates = [list_pool[i] for i in rand_indices[:num_candidates]]
         
         if ss.issparse(X):
             if not ss.isspmatrix_csr(X):
@@ -429,14 +419,13 @@ class Strategy2(BaseStrategy):
                         
         utils = []
         
-        for i in xrange(num_candidates):
+        for i in rand_indices[:num_candidates]:
             
             new_train_inds = list(current_train_indices)
-            new_train_inds.remove(candidates[i])
+            del new_train_inds[i]
             
             new_train_y = list(current_train_y)
-            # Remove whatever is in position candidates[i]
-            new_train_y.pop(candidates[i]) # CHEATING 1
+            del new_train_y[i]
             
             new_classifier = self.classifier(**self.classifier_args)
             new_classifier.fit(X[new_train_inds], new_train_y)
@@ -467,6 +456,6 @@ class Strategy2(BaseStrategy):
         
         uis = np.argsort(utils)
 
-        chosen = [candidates[i] for i in uis[:k]]
+        chosen = [current_train_indices[rand_indices[i]] for i in uis[:k]]
 
         return chosen
