@@ -472,8 +472,4 @@ class Strategy2(BaseStrategy):
 
         chosen = [candidates[i] for i in uis[:k]]
 
-        # sys.exit()
-        
-        # print 'chosen'
-
         return chosen
