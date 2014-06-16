@@ -305,7 +305,7 @@ class Strategy1(BaseStrategy):
     def log_gain(self, probs, labels):
         lg = 0
         for i in xrange(len(probs)):
-            lg -= np.log(probs[i][int(labels[i])])
+            lg += np.log(probs[i][int(labels[i])])
         return lg
 
 
@@ -375,8 +375,7 @@ class Strategy1(BaseStrategy):
 
         # print utils
         uis = np.argsort(utils)
-        if not self.option == 'log':
-            uis = uis[::-1]
+        uis = uis[::-1]
 
         chosen = [candidates[i] for i in uis[:k]]
         # print
@@ -407,7 +406,7 @@ class Strategy2(BaseStrategy):
     def log_gain(self, probs, labels):
         lg = 0
         for i in xrange(len(probs)):
-            lg -= np.log(probs[i][int(labels[i])])
+            lg += np.log(probs[i][int(labels[i])])
         return lg
 
 
@@ -433,11 +432,11 @@ class Strategy2(BaseStrategy):
         for i in xrange(num_candidates):
             
             new_train_inds = list(current_train_indices)
-            new_train_inds.append(candidates[i])
-            
+            new_train_inds.remove(candidates[i])
             
             new_train_y = list(current_train_y)
-            new_train_y.append(self.y_pool[candidates[i]]) # check this # CHEATING 1
+            # Remove whatever is in position candidates[i]
+            new_train_y.pop(candidates[i]) # CHEATING 1
             
             new_classifier = self.classifier(**self.classifier_args)
             new_classifier.fit(X[new_train_inds], new_train_y)
@@ -467,8 +466,6 @@ class Strategy2(BaseStrategy):
             utils.append(util)
         
         uis = np.argsort(utils)
-        if self.option == 'log':
-            uis = uis[::-1]
 
         chosen = [candidates[i] for i in uis[:k]]
 
