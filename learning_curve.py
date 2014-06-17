@@ -102,9 +102,9 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         elif strategy == 'unc':
             active_s = UncStrategy(seed=t, sub_pool=sub_pool)
         elif strategy == 's1':
-            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'log')
+            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'accu')
         elif strategy == 's2':
-            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'log')
+            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'accu')
             it = -1
         
         model = None
