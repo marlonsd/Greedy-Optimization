@@ -455,6 +455,7 @@ class Strategy2(BaseStrategy):
             utils.append(util)
         
         uis = np.argsort(utils)
+        uis = uis[::-1]
 
         chosen = [current_train_indices[rand_indices[i]] for i in uis[:k]]
 
