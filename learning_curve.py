@@ -136,8 +136,6 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                     trainIndices = list(pool)
                 else:
                     trainIndices.extend(newIndices)
-
-                print len(trainIndices)
                 
                 model = classifier(**alpha)
                 
