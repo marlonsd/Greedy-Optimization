@@ -48,29 +48,30 @@ def datasetReduction(X_train, y_train, m):
 
     aux_set = range(len(y_train))
     set_reduction = []
-
+    print 'Shrinking dataset'
     while (count < m):
         pos = np.random.choice(aux_set)
-        if y_train[pos] == int(choice) and not inVector(set_reduction, pos):
+        if y_train[pos] == int(choice):# and not inVector(set_reduction, pos):
             set_reduction.append(pos)
             choice = not choice
             count += 1
 
     np.random.shuffle(set_reduction)
+    print 'Dataset shirinked'
     return X_train[set_reduction], y_train[set_reduction]
 
 
 '''
 Main function. This function is responsible for training and testing.
 '''
-def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m):
+def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m, s_parameter):
     accuracies = defaultdict(lambda: [])
     aucs = defaultdict(lambda: [])    
     
     np.random.seed(42)
 
     for t in range(num_trials):
-        if m > 0:
+        if m > 0 and len(y_train) > m:
             X_pool, y_pool = datasetReduction(X_train, y_train, m)
         else:
             X_pool = X_train
@@ -102,9 +103,9 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         elif strategy == 'unc':
             active_s = UncStrategy(seed=t, sub_pool=sub_pool)
         elif strategy == 's1':
-            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'accu')
+            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
         elif strategy == 's2':
-            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = 'accu')
+            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
             it = -1
         
         model = None
@@ -222,6 +223,8 @@ if (__name__ == '__main__'):
     parser.add_argument("-m", default=0, type=int,
                         help='Sets size of the reduction to be done in the dataset, expects a integer positive value (default: No reduction).')
 
+    parser.add_argument("-p", default='log', type=str)
+
 
     # Parsing args
     args = parser.parse_args()
@@ -286,11 +289,13 @@ if (__name__ == '__main__'):
 
     m = args.m
 
+    s_parameter = args.p
+
     # Main Loop
     for strategy in strategies:
         t0 = time()
 
-        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m)
+        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m, s_parameter)
 
         duration[strategy] = time() - t0
 
