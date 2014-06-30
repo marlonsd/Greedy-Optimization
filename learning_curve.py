@@ -72,7 +72,11 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
 
     for t in range(num_trials):
         if m > 0 and len(y_train) > m:
-            X_pool, y_pool = datasetReduction(X_train, y_train, m)
+            
+            rand_indices = np.random.permutation(X_pool.shape[0])
+            X_pool = X_train[rand_indices]
+            y_pool = y_train[rand_indices]
+            
         else:
             X_pool = X_train
             y_pool = y_train
