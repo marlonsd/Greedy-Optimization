@@ -460,3 +460,75 @@ class Strategy2(BaseStrategy):
         chosen = [current_train_indices[rand_indices[i]] for i in uis[:k]]
 
         return chosen
+
+
+# function
+def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trials, classifier, alpha, option, seed):
+
+    # new_TrainIndices = current_train_indices
+    pool = list(pool)
+    # new_Pool = pool
+
+    randgen = np.random
+    randgen.seed(seed)
+
+    # Calculating utility for the giving training set
+    new_classifier = classifier(**alpha)
+    new_classifier.fit(X[current_train_indices], y[current_train_indices])
+
+    if (classifier) == type(GaussianNB()):
+            new_probs = new_classifier.predict_proba(X_test.toarray())
+    else:
+        new_probs = new_classifier.predict_proba(X_test)
+
+    if option == 'log':
+        previous_util = Strategy2.log_gain(new_probs, y_test)
+
+    elif option == 'auc':
+        auc = metrics.roc_auc_score(y_test, new_probs[:,1])
+        previous_util = auc
+    elif option == 'accu':
+        pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                
+        accu = metrics.accuracy_score(y_test, pred_y)
+        previous_util = accu
+
+    for i in range(number_trials):
+        rand_indices = randgen.permutation(len(current_train_indices))
+        rand_pool = randgen.permutation(len(pool))
+
+        new_train_inds = list(current_train_indices)
+        new_pool = list(pool)
+
+        del new_train_inds[rand_indices[0]]
+        new_train_inds.append(rand_pool[0])
+        del new_pool[rand_pool[0]]
+
+        new_classifier = classifier(**alpha)
+        new_classifier.fit(X[new_TrainIndices], y[new_TrainIndices])
+
+        if (classifier) == type(GaussianNB()):
+            new_probs = new_classifier.predict_proba(X_test.toarray())
+        else:
+            new_probs = new_classifier.predict_proba(X_test)
+
+        if option == 'log':
+            util = Strategy2.log_gain(new_probs, y_test)
+
+        elif option == 'auc':
+            auc = metrics.roc_auc_score(y_test, new_probs[:,1])
+            util = auc
+        elif option == 'accu':
+            pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                
+            accu = metrics.accuracy_score(y_test, pred_y)
+            util = accu
+
+
+        if util > previous_util:
+            current_train_indices = new_train_inds
+            pool = new_pool
+
+
+
+    return current_train_indices, set(pool)

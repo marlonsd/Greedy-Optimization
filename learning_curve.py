@@ -48,17 +48,18 @@ def datasetReduction(X_train, y_train, m):
 
     aux_set = range(len(y_train))
     set_reduction = []
-    print 'Shrinking dataset'
     while (count < m):
         pos = np.random.choice(aux_set)
-        if y_train[pos] == int(choice):# and not inVector(set_reduction, pos):
+        if y_train[pos] == int(choice) and not inVector(set_reduction, pos):
             set_reduction.append(pos)
             choice = not choice
             count += 1
 
     np.random.shuffle(set_reduction)
-    print 'Dataset shirinked'
     return X_train[set_reduction], y_train[set_reduction]
+
+
+
 
 
 '''
@@ -134,7 +135,7 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                         newIndices = boot_s.bootstrap(pool, y=y_pool, k=boot_strap_size)
                 else:
                     newIndices = active_s.chooseNext(pool, X_pool_csr, model, k = step_size, current_train_indices = trainIndices, current_train_y = y_pool[trainIndices])
-                
+                    
                 pool.difference_update(newIndices)
 
                 if strategy == 's2':
@@ -144,8 +145,12 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 
                 model = classifier(**alpha)
                 
+                # Make it better
+                # trainIndices, pool = makeItBetter(X_train, y_train, X_test, y_test, trainIndices, pool)
+
                 model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
                 
+
                 # Prediction
                 
                 # Gaussian Naive Bayes requires denses matrizes
