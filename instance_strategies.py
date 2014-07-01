@@ -463,14 +463,17 @@ class Strategy2(BaseStrategy):
 
 
 # function
-def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trials, classifier, alpha, option, seed):
-
-    # new_TrainIndices = current_train_indices
-    pool = list(pool)
-    # new_Pool = pool
-
+def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trials, classifier, alpha, option='auc', seed=42):
+    
     randgen = np.random
     randgen.seed(seed)
+
+    # print current_train_indices
+    # # print pool[10:]
+    # for i in range(10):
+    #     print pool[i],
+    # print
+    # print len(pool)
 
     # Calculating utility for the giving training set
     new_classifier = classifier(**alpha)
@@ -493,19 +496,37 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
         accu = metrics.accuracy_score(y_test, pred_y)
         previous_util = accu
 
+    # original = previous_util
+
     for i in range(number_trials):
+        # print
         rand_indices = randgen.permutation(len(current_train_indices))
         rand_pool = randgen.permutation(len(pool))
 
         new_train_inds = list(current_train_indices)
         new_pool = list(pool)
 
+        # print rand_indices
+        # print rand_pool
+        # for i in new_train_inds:
+        #     print i,
+        # print
+        # for i in range(10):
+        #     print new_pool[i],
+        # print
+
+        new_pool.append(new_train_inds[rand_indices[0]])
         del new_train_inds[rand_indices[0]]
         new_train_inds.append(rand_pool[0])
         del new_pool[rand_pool[0]]
 
+        # for i in new_train_inds:
+        #     print i,
+        # print
+        # print new_pool[len(pool) - 1]
+
         new_classifier = classifier(**alpha)
-        new_classifier.fit(X[new_TrainIndices], y[new_TrainIndices])
+        new_classifier.fit(X[new_train_inds], y[new_train_inds])
 
         if (classifier) == type(GaussianNB()):
             new_probs = new_classifier.predict_proba(X_test.toarray())
@@ -524,11 +545,14 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
             accu = metrics.accuracy_score(y_test, pred_y)
             util = accu
 
+        print util, previous_util
 
         if util > previous_util:
             current_train_indices = new_train_inds
             pool = new_pool
+            previous_util = util
+
+        c = raw_input()
 
 
-
-    return current_train_indices, set(pool)
+    return current_train_indices.tolist(), set(pool)

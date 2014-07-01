@@ -31,7 +31,7 @@ from sklearn.datasets import load_svmlight_file
 
 from sklearn.cross_validation import train_test_split
 
-from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2
+from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2, makeItBetter
 
 def inVector(vector, value):
 
@@ -59,13 +59,26 @@ def datasetReduction(X_train, y_train, m):
     return X_train[set_reduction], y_train[set_reduction]
 
 
+def distribution(y):
+    class_0 = 1
+    class_1 = 0
 
+    group = y[0]
+
+    for i in y[1:]:
+        if i == group:
+            class_0 += 1
+        else:
+            class_1 += 1
+
+    print 'Class 0:', class_0
+    print 'Class 1:', class_1
 
 
 '''
 Main function. This function is responsible for training and testing.
 '''
-def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m, s_parameter):
+def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter):
     accuracies = defaultdict(lambda: [])
     aucs = defaultdict(lambda: [])    
     
@@ -74,13 +87,16 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
     for t in range(num_trials):
         if m > 0 and len(y_train) > m:
             
-            rand_indices = np.random.permutation(X_pool.shape[0])
-            X_pool = X_train[rand_indices]
-            y_pool = y_train[rand_indices]
+            rand_indices = np.random.permutation(X_train.shape[0])
+            X_pool = X_train[rand_indices[:m]]
+            y_pool = y_train[rand_indices[:m]]
             
         else:
             X_pool = X_train
             y_pool = y_train
+
+        # distribution(y_pool)
+        # sys.exit()
 
         print "trial", t
 
@@ -112,7 +128,7 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         elif strategy == 's2':
             active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
             it = -1
-        
+
         model = None
 
         condition = True
@@ -146,7 +162,8 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 model = classifier(**alpha)
                 
                 # Make it better
-                # trainIndices, pool = makeItBetter(X_train, y_train, X_test, y_test, trainIndices, pool)
+                trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=42)
+
 
                 model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
                 
@@ -304,7 +321,7 @@ if (__name__ == '__main__'):
     for strategy in strategies:
         t0 = time()
 
-        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, boot_strap_size, classifier, alpha, y_test, m, s_parameter)
+        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter)
 
         duration[strategy] = time() - t0
 
