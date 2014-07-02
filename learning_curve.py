@@ -162,7 +162,7 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 model = classifier(**alpha)
                 
                 # Make it better
-                trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=42)
+                # trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=42)
 
 
                 model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
