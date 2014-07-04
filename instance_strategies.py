@@ -24,6 +24,8 @@ class BootstrapFromEach(object):
             data[y[i]].append(i)
         chosen = []
         num_classes = len(data.keys())
+        print k/num_classes, k, num_classes
+        c=raw_input()
         for label in data.keys():
             candidates = data[label]
             indices = self.randS.chooseNext(candidates, k=k/num_classes)
@@ -467,6 +469,8 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
     
     randgen = np.random
     randgen.seed(seed)
+    comp = len(current_train_indices)
+    comp2 = len(pool)
 
     # print current_train_indices
     # # print pool[10:]
@@ -501,10 +505,12 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
     for i in range(number_trials):
         # print
         rand_indices = randgen.permutation(len(current_train_indices))
-        rand_pool = randgen.permutation(len(pool))
+        # rand_pool = randgen.permutation(len(pool))
 
         new_train_inds = list(current_train_indices)
-        new_pool = list(pool)
+        new_pool = set(pool)
+
+        elem = new_pool.pop()
 
         # print rand_indices
         # print rand_pool
@@ -515,10 +521,9 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
         #     print new_pool[i],
         # print
 
-        new_pool.append(new_train_inds[rand_indices[0]])
+        new_pool.add(new_train_inds[rand_indices[0]])
         del new_train_inds[rand_indices[0]]
-        new_train_inds.append(rand_pool[0])
-        del new_pool[rand_pool[0]]
+        new_train_inds.append(elem)
 
         # for i in new_train_inds:
         #     print i,
@@ -545,14 +550,17 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
             accu = metrics.accuracy_score(y_test, pred_y)
             util = accu
 
-        print util, previous_util
+        # print util, previous_util
 
         if util > previous_util:
             current_train_indices = new_train_inds
-            pool = new_pool
+            pool = set(new_pool)
             previous_util = util
 
-        c = raw_input()
-
-
-    return current_train_indices.tolist(), set(pool)
+        # c = raw_input()
+    # print len(pool)
+    if not comp2 == len(set(pool)):
+        print 'ERROR POOL'
+        sys.exit()
+    # print
+    return list(current_train_indices), set(pool)
