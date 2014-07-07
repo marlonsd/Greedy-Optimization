@@ -80,13 +80,13 @@ Main function. This function is responsible for training and testing.
 '''
 def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter):
     accuracies = defaultdict(lambda: [])
-    aucs = defaultdict(lambda: [])    
-    
-    np.random.seed(42)
+    aucs = defaultdict(lambda: [])
 
     for t in range(num_trials):
         if m > 0 and len(y_train) > m:
             
+            np.random.seed(t)
+
             rand_indices = np.random.permutation(X_train.shape[0])
             X_pool = X_train[rand_indices[:m]]
             y_pool = y_train[rand_indices[:m]]
@@ -94,9 +94,6 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         else:
             X_pool = X_train
             y_pool = y_train
-
-        # distribution(y_pool)
-        # sys.exit()
 
         print "trial", t
 
