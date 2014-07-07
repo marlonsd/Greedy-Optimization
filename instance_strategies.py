@@ -24,7 +24,7 @@ class BootstrapFromEach(object):
             data[y[i]].append(i)
         chosen = []
         num_classes = len(data.keys())
-        print k/num_classes, k, num_classes
+        # print k/num_classes, k, num_classes
         c=raw_input()
         for label in data.keys():
             candidates = data[label]
