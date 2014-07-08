@@ -25,7 +25,6 @@ class BootstrapFromEach(object):
         chosen = []
         num_classes = len(data.keys())
         # print k/num_classes, k, num_classes
-        c=raw_input()
         for label in data.keys():
             candidates = data[label]
             indices = self.randS.chooseNext(candidates, k=k/num_classes)
