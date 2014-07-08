@@ -394,8 +394,8 @@ if (__name__ == '__main__'):
         if filename:
             doc.write(strategy+'\n'+'accuracy'+'\n')
             doc.write('train size,mean,standard deviation,standard error'+'\n')
-            print len(values),len(y), len(z), len(e)
-            print
+            # print len(values),len(y), len(z), len(e)
+            # print
             for i in range(len(y)):
                 doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
             doc.write('\n')
