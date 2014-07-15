@@ -31,7 +31,7 @@ from sklearn.datasets import load_svmlight_file
 
 from sklearn.cross_validation import train_test_split
 
-from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2, makeItBetter
+from instance_strategies import LogGainStrategy, RandomStrategy, UncStrategy, RotateStrategy, BootstrapFromEach, QBCStrategy, ErrorReductionStrategy, Strategy1, Strategy2, makeItBetter, SimulatedAnnealing
 
 def inVector(vector, value):
 
@@ -125,6 +125,8 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         elif strategy == 's2':
             active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
             it = -1
+        elif strategy == 'sim':
+            active_s = SimulatedAnnealing(seed=t)
 
         model = None
 
@@ -223,7 +225,7 @@ if (__name__ == '__main__'):
     parser.add_argument("-nt", "--num_trials", type=int, default=10, help="Number of trials (default: 10).")
 
     # Strategies
-    parser.add_argument("-st", "--strategies", choices=['erreduct', 'loggain', 'qbc', 'rand', 's1', 's2', 'unc'], nargs='*',default=['rand'],
+    parser.add_argument("-st", "--strategies", choices=['erreduct', 'loggain', 'qbc', 'rand', 's1', 's2', 'sim', 'unc'], nargs='*',default=['rand'],
                         help="Represent a list of strategies for choosing next samples (default: rand).")
 
     # Boot Strap
