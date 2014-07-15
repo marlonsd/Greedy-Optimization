@@ -78,7 +78,7 @@ def distribution(y):
 '''
 Main function. This function is responsible for training and testing.
 '''
-def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter):
+def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter, mb):
     accuracies = defaultdict(lambda: [])
     aucs = defaultdict(lambda: [])
 
@@ -148,7 +148,7 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                         newIndices = boot_s.bootstrap(pool, y=y_pool, k=boot_strap_size)
                 else:
                     newIndices = active_s.chooseNext(pool, X_pool_csr, model, k = step_size, current_train_indices = trainIndices, current_train_y = y_pool[trainIndices])
-                    
+
                 pool.difference_update(newIndices)
 
                 if strategy == 's2':
@@ -158,12 +158,8 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 
                 model = classifier(**alpha)
                 
-                # Make it better
-                # print len(trainIndices), len(pool)
-                trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=t)
-                # print len(trainIndices), len(pool)
-                # c=raw_input()
-                # print
+                if mb:
+                    trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=t)
 
                 model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
 
@@ -252,6 +248,8 @@ if (__name__ == '__main__'):
 
     parser.add_argument("-p", default='log', type=str)
 
+    parser.add_argument("-mb", "--makeitbetter", action="store_true")    
+
 
     # Parsing args
     args = parser.parse_args()
@@ -322,7 +320,7 @@ if (__name__ == '__main__'):
     for strategy in strategies:
         t0 = time()
 
-        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter)
+        accuracies[strategy], aucs[strategy] = learning(num_trials, X_pool, y_pool, X_test, strategy, budget, step_size, sub_pool, boot_strap_size, classifier, alpha, y_test, m, s_parameter, args.makeitbetter)
 
         duration[strategy] = time() - t0
 
