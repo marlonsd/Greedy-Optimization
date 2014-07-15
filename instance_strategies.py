@@ -547,8 +547,10 @@ class SimulatedAnnealing(BaseStrategy):
     def chooseNext(self, pool=None, X=None, model=None, k=1, current_train_indices = None, current_train_y = None):
         r = self.randgen.random()
         if r < self.current_temperature:
+            pass
             # out = strategy1.chooseNext
         else:
+            pass
             # out = strategy2.chooseNext
 
         self.current_temperature -= self.temperature_step
