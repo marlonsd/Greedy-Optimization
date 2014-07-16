@@ -74,6 +74,35 @@ def distribution(y):
     print 'Class 0:', class_0
     print 'Class 1:', class_1
 
+def choosingStrategies(strategy, classifier, seed, sub_pool, alpha, X_test, y_test, y_pool, s_parameter = []):
+
+    it = 0
+
+    if strategy == 'erreduct':
+        active_s = ErrorReductionStrategy(classifier=classifier, seed=seed, sub_pool=sub_pool, classifier_args=alpha)
+    elif strategy == 'loggain':
+        active_s = LogGainStrategy(classifier=classifier, seed=seed, sub_pool=sub_pool, classifier_args=alpha)
+    elif strategy == 'qbc':
+        active_s = QBCStrategy(classifier=classifier, classifier_args=alpha)
+    elif strategy == 'rand':    
+        active_s = RandomStrategy(seed=seed)
+    elif strategy == 'unc':
+        active_s = UncStrategy(seed=seed, sub_pool=sub_pool)
+    elif strategy == 's1':
+        active_s = Strategy1(classifier=classifier, seed=seed, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
+    elif strategy == 's2':
+        active_s = Strategy2(classifier=classifier, seed=seed, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
+        it = -1
+    elif strategy == 'sim':
+        if len(s_parameter) < 2:
+            print '2 strategies need to be chosen in order to use Simulated Annealing strategy.'
+            sys.exit()
+        active_learning_strategy1, it = choosingStrategies(s_parameter[0], classifier, seed, sub_pool, alpha, X_test, y_test, y_pool)
+        active_learning_strategy2, it = choosingStrategies(s_parameter[1], classifier, seed, sub_pool, alpha, X_test, y_test, y_pool)
+        active_s = SimulatedAnnealing(strategy1=active_learning_strategy1, strategy2=active_learning_strategy2, seed=seed)
+        it = -1
+
+    return active_s, it
 
 '''
 Main function. This function is responsible for training and testing.
@@ -110,23 +139,24 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
         bootsrapped = False
 
         # Choosing strategy
-        if strategy == 'erreduct':
-            active_s = ErrorReductionStrategy(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha)
-        elif strategy == 'loggain':
-            active_s = LogGainStrategy(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha)
-        elif strategy == 'qbc':
-            active_s = QBCStrategy(classifier=classifier, classifier_args=alpha)
-        elif strategy == 'rand':    
-            active_s = RandomStrategy(seed=t)
-        elif strategy == 'unc':
-            active_s = UncStrategy(seed=t, sub_pool=sub_pool)
-        elif strategy == 's1':
-            active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
-        elif strategy == 's2':
-            active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
-            it = -1
-        elif strategy == 'sim':
-            active_s = SimulatedAnnealing(seed=t)
+        # if strategy == 'erreduct':
+        #     active_s = ErrorReductionStrategy(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha)
+        # elif strategy == 'loggain':
+        #     active_s = LogGainStrategy(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha)
+        # elif strategy == 'qbc':
+        #     active_s = QBCStrategy(classifier=classifier, classifier_args=alpha)
+        # elif strategy == 'rand':    
+        #     active_s = RandomStrategy(seed=t)
+        # elif strategy == 'unc':
+        #     active_s = UncStrategy(seed=t, sub_pool=sub_pool)
+        # elif strategy == 's1':
+        #     active_s = Strategy1(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
+        # elif strategy == 's2':
+        #     active_s = Strategy2(classifier=classifier, seed=t, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
+        #     it = -1
+        # elif strategy == 'sim':
+        #     active_s = SimulatedAnnealing(seed=t)
+        active_s, it = choosingStrategies(strategy, classifier, t, sub_pool, alpha, X_test, y_test, y_pool, s_parameter)
 
         model = None
 
@@ -248,7 +278,7 @@ if (__name__ == '__main__'):
     parser.add_argument("-m", default=0, type=int,
                         help='Sets size of the reduction to be done in the dataset, expects a integer positive value (default: No reduction).')
 
-    parser.add_argument("-p", default='log', type=str)
+    parser.add_argument("-p", default=['log'], type=str, nargs='*')
 
     parser.add_argument("-mb", "--makeitbetter", action="store_true")    
 
@@ -317,6 +347,12 @@ if (__name__ == '__main__'):
     m = args.m
 
     s_parameter = args.p
+    # Argument p is used for strategies 1 and 2, and Simulated Annealing.
+    # If there is only one argument, it is for strategies 1 and 2.
+    # If there are 2 arguments or even, it is for Simulated Annealing. But, only the first two are going to be used.
+    if len(s_parameter) == 1:
+        print 'one argument'
+        s_parameter = s_parameter[0]
 
     # Main Loop
     for strategy in strategies:
@@ -384,11 +420,11 @@ if (__name__ == '__main__'):
         z = [np.std(accuracy[xi]) for xi in x]
         e = np.array(z) / math.sqrt(num_trials)
 
-        # plt.figure(1)
-        # plt.subplot(211)
-        # plt.plot(x, y, '-', label=strategy)
-        # plt.legend(loc='best')
-        # plt.title('Accuracy')
+        plt.figure(1)
+        plt.subplot(211)
+        plt.plot(x, y, '-', label=strategy)
+        plt.legend(loc='best')
+        plt.title('Accuracy')
 
         # Saves all accuracies into a file
         if filename:
@@ -407,10 +443,10 @@ if (__name__ == '__main__'):
         e = np.array(z) / math.sqrt(num_trials)
           
 
-        # plt.subplot(212)
-        # plt.plot(x, y, '-', label=strategy)
-        # plt.legend(loc='best')
-        # plt.title('AUC')
+        plt.subplot(212)
+        plt.plot(x, y, '-', label=strategy)
+        plt.legend(loc='best')
+        plt.title('AUC')
 
         # Saves all acus into a file
         if filename:
@@ -422,7 +458,7 @@ if (__name__ == '__main__'):
 
     if filename:
         doc.close()
-        # fig_name = filename.split('.')[0] + '.png'
-        # plt.savefig(fig_name)
-    # else:
-    #     plt.show()
+        fig_name = filename.split('.')[0] + '.png'
+        plt.savefig(fig_name)
+    else:
+        plt.show()

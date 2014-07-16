@@ -427,6 +427,8 @@ class Strategy2(BaseStrategy):
             
             new_train_y = list(current_train_y)
             del new_train_y[i]
+
+            print set(new_train_y)
             
             new_classifier = self.classifier(**self.classifier_args)
             new_classifier.fit(X[new_train_inds], new_train_y)
@@ -548,10 +550,10 @@ class SimulatedAnnealing(BaseStrategy):
         r = self.randgen.random()
         if r < self.current_temperature:
             pass
-            # out = strategy1.chooseNext
+            out = self.strategy1.chooseNext(pool, X, model, k, current_train_indices, current_train_y)
         else:
             pass
-            # out = strategy2.chooseNext
+            out = self.strategy2.chooseNext(pool, X, model, k, current_train_indices, current_train_y)
 
         self.current_temperature -= self.temperature_step
         return out
