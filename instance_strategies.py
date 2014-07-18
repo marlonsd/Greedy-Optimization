@@ -428,32 +428,33 @@ class Strategy2(BaseStrategy):
             new_train_y = list(current_train_y)
             del new_train_y[i]
 
-            print set(new_train_y)
-            
-            new_classifier = self.classifier(**self.classifier_args)
-            new_classifier.fit(X[new_train_inds], new_train_y)
+            util = 0.
 
-            if (self.classifier) == type(GaussianNB()):
-                new_probs = new_classifier.predict_proba(self.X_test.toarray())
-            else:
-                new_probs = new_classifier.predict_proba(self.X_test)
+            if len(set(new_train_y)) > 2:
+                new_classifier = self.classifier(**self.classifier_args)
+                new_classifier.fit(X[new_train_inds], new_train_y)
 
-            # compute utility # CHEATING 2
-            if self.option == 'log':
-                #LOGGAIN on test
-                # new_probs = new_classifier.predict_proba(self.X_test)
-                util = self.log_gain(new_probs, self.y_test)
+                if (self.classifier) == type(GaussianNB()):
+                    new_probs = new_classifier.predict_proba(self.X_test.toarray())
+                else:
+                    new_probs = new_classifier.predict_proba(self.X_test)
 
-            elif self.option == 'auc':
-            # OR AUC on the test
-                auc = metrics.roc_auc_score(self.y_test, new_probs[:,1])
-                util = auc
-            elif self.option == 'accu':
-            # OR accuracy on the test
-                pred_y = model.classes_[np.argmax(new_probs, axis=1)]
-                
-                accu = metrics.accuracy_score(self.y_test, pred_y)
-                util = accu    
+                # compute utility # CHEATING 2
+                if self.option == 'log':
+                    #LOGGAIN on test
+                    # new_probs = new_classifier.predict_proba(self.X_test)
+                    util = self.log_gain(new_probs, self.y_test)
+
+                elif self.option == 'auc':
+                # OR AUC on the test
+                    auc = metrics.roc_auc_score(self.y_test, new_probs[:,1])
+                    util = auc
+                elif self.option == 'accu':
+                # OR accuracy on the test
+                    pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                    
+                    accu = metrics.accuracy_score(self.y_test, pred_y)
+                    util = accu
             
             utils.append(util)
         
