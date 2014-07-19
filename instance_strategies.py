@@ -457,7 +457,7 @@ class Strategy2(BaseStrategy):
                     util = accu
             
             utils.append(util)
-        
+        print
         uis = np.argsort(utils)
         uis = uis[::-1]
 
