@@ -429,7 +429,7 @@ class Strategy2(BaseStrategy):
             del new_train_y[i]
 
             util = 0.
-
+            print set(new_train_y)
             if len(set(new_train_y)) > 1:
                 new_classifier = self.classifier(**self.classifier_args)
                 new_classifier.fit(X[new_train_inds], new_train_y)
