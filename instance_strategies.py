@@ -333,35 +333,37 @@ class Strategy1(BaseStrategy):
             
             new_train_y = list(current_train_y)
             new_train_y.append(self.y_pool[candidates[i]]) # check this # CHEATING 1
-            # print self.y_pool[candidates[i]]
-            
-            new_classifier = self.classifier(**self.classifier_args)
-            new_classifier.fit(X[new_train_inds], new_train_y)
 
-            if (self.classifier) == type(GaussianNB()):
-                new_probs = new_classifier.predict_proba(self.X_test.toarray())
-            else:
-                new_probs = new_classifier.predict_proba(self.X_test)
+            util = -np.inf
 
-            # compute utility # CHEATING 2
-            if self.option == 'log':
-                #LOGGAIN on test
-                # new_probs = new_classifier.predict_proba(self.X_test)
-                util = self.log_gain(new_probs, self.y_test)
+            if len(set(new_train_y)) > 1:
+                new_classifier = self.classifier(**self.classifier_args)
+                new_classifier.fit(X[new_train_inds], new_train_y)
 
-            elif self.option == 'auc':
-            # OR AUC on the test
-                auc = metrics.roc_auc_score(self.y_test, new_probs[:,1])
-                util = auc
-                # print len(new_probs[:,1])
-                # print util
+                if (self.classifier) == type(GaussianNB()):
+                    new_probs = new_classifier.predict_proba(self.X_test.toarray())
+                else:
+                    new_probs = new_classifier.predict_proba(self.X_test)
 
-            elif self.option == 'accu':
-            # OR accuracy on the test
-                pred_y = model.classes_[np.argmax(new_probs, axis=1)]
-                
-                accu = metrics.accuracy_score(self.y_test, pred_y)
-                util = accu    
+                # compute utility # CHEATING 2
+                if self.option == 'log':
+                    #LOGGAIN on test
+                    # new_probs = new_classifier.predict_proba(self.X_test)
+                    util = self.log_gain(new_probs, self.y_test)
+
+                elif self.option == 'auc':
+                # OR AUC on the test
+                    auc = metrics.roc_auc_score(self.y_test, new_probs[:,1])
+                    util = auc
+                    # print len(new_probs[:,1])
+                    # print util
+
+                elif self.option == 'accu':
+                # OR accuracy on the test
+                    pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                    
+                    accu = metrics.accuracy_score(self.y_test, pred_y)
+                    util = accu
             
             utils.append(util)
         # print
@@ -428,8 +430,8 @@ class Strategy2(BaseStrategy):
             new_train_y = list(current_train_y)
             del new_train_y[i]
 
-            util = 0.
-            print set(new_train_y)
+            util = -np.inf
+            # print set(new_train_y)
             if len(set(new_train_y)) > 1:
                 new_classifier = self.classifier(**self.classifier_args)
                 new_classifier.fit(X[new_train_inds], new_train_y)
@@ -457,7 +459,7 @@ class Strategy2(BaseStrategy):
                     util = accu
             
             utils.append(util)
-        print
+        # print
         uis = np.argsort(utils)
         uis = uis[::-1]
 
@@ -475,24 +477,28 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
     comp2 = len(pool)
 
     new_classifier = classifier(**alpha)
-    new_classifier.fit(X[current_train_indices], y[current_train_indices])
 
-    if (classifier) == type(GaussianNB()):
-            new_probs = new_classifier.predict_proba(X_test.toarray())
-    else:
-        new_probs = new_classifier.predict_proba(X_test)
+    previous_util = -np.inf
 
-    if option == 'log':
-        previous_util = Strategy2.log_gain(new_probs, y_test)
+    if len(set(y[current_train_indices])) > 1:
+        new_classifier.fit(X[current_train_indices], y[current_train_indices])
 
-    elif option == 'auc':
-        auc = metrics.roc_auc_score(y_test, new_probs[:,1])
-        previous_util = auc
-    elif option == 'accu':
-        pred_y = model.classes_[np.argmax(new_probs, axis=1)]
-                
-        accu = metrics.accuracy_score(y_test, pred_y)
-        previous_util = accu
+        if (classifier) == type(GaussianNB()):
+                new_probs = new_classifier.predict_proba(X_test.toarray())
+        else:
+            new_probs = new_classifier.predict_proba(X_test)
+
+        if option == 'log':
+            previous_util = Strategy2.log_gain(new_probs, y_test)
+
+        elif option == 'auc':
+            auc = metrics.roc_auc_score(y_test, new_probs[:,1])
+            previous_util = auc
+        elif option == 'accu':
+            pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                    
+            accu = metrics.accuracy_score(y_test, pred_y)
+            previous_util = accu
 
     for i in range(number_trials):
 
@@ -510,25 +516,28 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
         new_train_inds.append(elem)
         new_pool = set(new_pool)
 
-        new_classifier = classifier(**alpha)
-        new_classifier.fit(X[new_train_inds], y[new_train_inds])
+        util = -np.inf
+        
+        if len(set(y[new_train_inds])) > 1:
+            new_classifier = classifier(**alpha)
+            new_classifier.fit(X[new_train_inds], y[new_train_inds])
 
-        if (classifier) == type(GaussianNB()):
-            new_probs = new_classifier.predict_proba(X_test.toarray())
-        else:
-            new_probs = new_classifier.predict_proba(X_test)
+            if (classifier) == type(GaussianNB()):
+                new_probs = new_classifier.predict_proba(X_test.toarray())
+            else:
+                new_probs = new_classifier.predict_proba(X_test)
 
-        if option == 'log':
-            util = Strategy2.log_gain(new_probs, y_test)
+            if option == 'log':
+                util = Strategy2.log_gain(new_probs, y_test)
 
-        elif option == 'auc':
-            auc = metrics.roc_auc_score(y_test, new_probs[:,1])
-            util = auc
-        elif option == 'accu':
-            pred_y = model.classes_[np.argmax(new_probs, axis=1)]
-                
-            accu = metrics.accuracy_score(y_test, pred_y)
-            util = accu
+            elif option == 'auc':
+                auc = metrics.roc_auc_score(y_test, new_probs[:,1])
+                util = auc
+            elif option == 'accu':
+                pred_y = model.classes_[np.argmax(new_probs, axis=1)]
+                    
+                accu = metrics.accuracy_score(y_test, pred_y)
+                util = accu
 
         if util > previous_util:
             current_train_indices = new_train_inds

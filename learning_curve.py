@@ -193,24 +193,28 @@ def learning(num_trials, X_train, y_train, X_test, strategy, budget, step_size, 
                 if mb:
                     trainIndices, pool = makeItBetter(X_pool_csr, y_pool, X_test, y_test, current_train_indices = trainIndices, pool = list(pool), number_trials = sub_pool, classifier=classifier, alpha=alpha, option='auc', seed=t)
 
-                model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
+                auc = -np.inf
+                accu = -np.inf
 
-                
+                if len(set(y_pool[trainIndices])) > 1:
+                    model.fit(X_pool_csr[trainIndices], y_pool[trainIndices])
 
-                # Prediction
-                
-                # Gaussian Naive Bayes requires denses matrizes
-                if (classifier) == type(GaussianNB()):
-                    y_probas = model.predict_proba(X_test.toarray())
-                else:
-                    y_probas = model.predict_proba(X_test)
+                    
 
-                # Metrics
-                auc = metrics.roc_auc_score(y_test, y_probas[:,1])     
-                
-                pred_y = model.classes_[np.argmax(y_probas, axis=1)]
-                
-                accu = metrics.accuracy_score(y_test, pred_y)
+                    # Prediction
+                    
+                    # Gaussian Naive Bayes requires denses matrizes
+                    if (classifier) == type(GaussianNB()):
+                        y_probas = model.predict_proba(X_test.toarray())
+                    else:
+                        y_probas = model.predict_proba(X_test)
+
+                    # Metrics
+                    auc = metrics.roc_auc_score(y_test, y_probas[:,1])     
+                    
+                    pred_y = model.classes_[np.argmax(y_probas, axis=1)]
+                    
+                    accu = metrics.accuracy_score(y_test, pred_y)
                 
                 accuracies[len(trainIndices)].append(accu)
                 aucs[len(trainIndices)].append(auc)
@@ -417,14 +421,23 @@ if (__name__ == '__main__'):
         # Plotting Accuracy
         x = sorted(accuracy.keys())
         y = [np.mean(accuracy[xi]) for xi in x]
-        z = [np.std(accuracy[xi]) for xi in x]
+        # z = [np.std(accuracy[xi]) for xi in x]
+        z = []
+        for xi in x:
+            std = []
+            for elem in accuracy[xi]:
+                aux = elem
+                if np.isinf(elem):
+                    aux = 0
+                std.append(aux)
+            z.append(np.std(std))
         e = np.array(z) / math.sqrt(num_trials)
 
-        # plt.figure(1)
-        # plt.subplot(211)
-        # plt.plot(x, y, '-', label=strategy)
-        # plt.legend(loc='best')
-        # plt.title('Accuracy')
+        plt.figure(1)
+        plt.subplot(211)
+        plt.plot(x, y, '-', label=strategy)
+        plt.legend(loc='best')
+        plt.title('Accuracy')
 
         # Saves all accuracies into a file
         if filename:
@@ -433,32 +446,41 @@ if (__name__ == '__main__'):
             # print len(values),len(y), len(z), len(e)
             # print
             for i in range(len(y)):
-                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
+                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i]))#, e[i]))
             doc.write('\n')
 
         # Plotting AUC
         x = sorted(auc.keys())
         y = [np.mean(auc[xi]) for xi in x]
-        z = [np.std(auc[xi]) for xi in x]
+        # z = [np.std(auc[xi]) for xi in x]
+        z = []
+        for xi in x:
+            std = []
+            for elem in auc[xi]:
+                aux = elem
+                if np.isinf(elem):
+                    aux = 0
+                std.append(aux)
+            z.append(np.std(std))
         e = np.array(z) / math.sqrt(num_trials)
           
 
-        # plt.subplot(212)
-        # plt.plot(x, y, '-', label=strategy)
-        # plt.legend(loc='best')
-        # plt.title('AUC')
+        plt.subplot(212)
+        plt.plot(x, y, '-', label=strategy)
+        plt.legend(loc='best')
+        plt.title('AUC')
 
         # Saves all acus into a file
         if filename:
             doc.write('AUC'+'\n')
             doc.write('train size,mean,standard deviation,standard error'+'\n')
             for i in range(len(y)):
-                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
+                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i]))#, e[i]))
             doc.write('\n\n\n')
 
     if filename:
         doc.close()
-        # fig_name = filename.split('.')[0] + '.png'
-        # plt.savefig(fig_name)
-    # else:
-        # plt.show()
+        fig_name = filename.split('.')[0] + '.png'
+        plt.savefig(fig_name)
+    else:
+        plt.show()
