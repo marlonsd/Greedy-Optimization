@@ -482,5 +482,5 @@ if (__name__ == '__main__'):
         doc.close()
         # fig_name = filename.split('.')[0] + '.png'
         # plt.savefig(fig_name)
-    else:
+    # else:
         # plt.show()
