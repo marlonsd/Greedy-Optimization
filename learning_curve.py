@@ -433,11 +433,11 @@ if (__name__ == '__main__'):
             z.append(np.std(std))
         e = np.array(z) / math.sqrt(num_trials)
 
-        plt.figure(1)
-        plt.subplot(211)
-        plt.plot(x, y, '-', label=strategy)
-        plt.legend(loc='best')
-        plt.title('Accuracy')
+        # plt.figure(1)
+        # plt.subplot(211)
+        # plt.plot(x, y, '-', label=strategy)
+        # plt.legend(loc='best')
+        # plt.title('Accuracy')
 
         # Saves all accuracies into a file
         if filename:
@@ -465,10 +465,10 @@ if (__name__ == '__main__'):
         e = np.array(z) / math.sqrt(num_trials)
           
 
-        plt.subplot(212)
-        plt.plot(x, y, '-', label=strategy)
-        plt.legend(loc='best')
-        plt.title('AUC')
+        # plt.subplot(212)
+        # plt.plot(x, y, '-', label=strategy)
+        # plt.legend(loc='best')
+        # plt.title('AUC')
 
         # Saves all acus into a file
         if filename:
@@ -480,7 +480,7 @@ if (__name__ == '__main__'):
 
     if filename:
         doc.close()
-        fig_name = filename.split('.')[0] + '.png'
-        plt.savefig(fig_name)
+        # fig_name = filename.split('.')[0] + '.png'
+        # plt.savefig(fig_name)
     else:
-        plt.show()
+        # plt.show()
