@@ -446,7 +446,7 @@ if (__name__ == '__main__'):
             # print len(values),len(y), len(z), len(e)
             # print
             for i in range(len(y)):
-                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i]))#, e[i]))
+                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
             doc.write('\n')
 
         # Plotting AUC
@@ -475,7 +475,7 @@ if (__name__ == '__main__'):
             doc.write('AUC'+'\n')
             doc.write('train size,mean,standard deviation,standard error'+'\n')
             for i in range(len(y)):
-                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i]))#, e[i]))
+                doc.write("%d,%f,%f,%f\n" % (values[i], y[i], z[i], e[i]))
             doc.write('\n\n\n')
 
     if filename:
