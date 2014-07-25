@@ -94,12 +94,12 @@ def choosingStrategies(strategy, classifier, seed, sub_pool, alpha, X_test, y_te
         active_s = Strategy2(classifier=classifier, seed=seed, sub_pool=sub_pool, classifier_args=alpha, X_test = X_test, y_test = y_test, y_pool = y_pool, option = s_parameter)
         it = -1
     elif strategy == 'sim':
-        if len(s_parameter) < 2:
+        if len(s_parameter) < 4:
             print '2 strategies need to be chosen in order to use Simulated Annealing strategy.'
             sys.exit()
         active_learning_strategy1, it = choosingStrategies(s_parameter[0], classifier, seed, sub_pool, alpha, X_test, y_test, y_pool)
         active_learning_strategy2, it = choosingStrategies(s_parameter[1], classifier, seed, sub_pool, alpha, X_test, y_test, y_pool)
-        active_s = SimulatedAnnealing(strategy1=active_learning_strategy1, strategy2=active_learning_strategy2, seed=seed)
+        active_s = SimulatedAnnealing(strategy1=active_learning_strategy1, strategy2=active_learning_strategy2, seed=seed, inicial_temperature=float(s_parameter[2]), temperature_step=float(s_parameter[3]))
         it = -1
 
     return active_s, it
