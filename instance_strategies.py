@@ -468,7 +468,10 @@ class Strategy2(BaseStrategy):
         return chosen
 
 
-# function
+"""
+It takes the result of one strategy and tries to improve it, by replacing elements from the output by other in pool.
+Uses accuracy, AUC or log gain to compare results
+"""
 def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trials, classifier, alpha, option='auc', seed=42):
     
     randgen = np.random
@@ -478,6 +481,7 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
 
     new_classifier = classifier(**alpha)
 
+    # Calculating accuracy, AUC or log gain of the giving current_train_indices
     previous_util = -np.inf
 
     if len(set(y[current_train_indices])) > 1:
@@ -500,6 +504,8 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
             accu = metrics.accuracy_score(y_test, pred_y)
             previous_util = accu
 
+    # Randomly replace values from training set by random elements from pool
+    # Process is repeated number_trials times
     for i in range(number_trials):
 
         rand_indices = randgen.permutation(len(current_train_indices))
@@ -508,6 +514,7 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
         new_train_inds = list(current_train_indices)
         new_pool = list(pool)
 
+        # Replacing values
         elem = new_pool[rand_pool[0]]
         del new_pool[rand_pool[0]]
 
@@ -518,6 +525,7 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
 
         util = -np.inf
         
+        # Computing metric
         if len(set(y[new_train_inds])) > 1:
             new_classifier = classifier(**alpha)
             new_classifier.fit(X[new_train_inds], y[new_train_inds])
@@ -539,6 +547,7 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
                 accu = metrics.accuracy_score(y_test, pred_y)
                 util = accu
 
+        # If there was improvement, keep it; otherwise undo
         if util > previous_util:
             current_train_indices = new_train_inds
             pool = set(new_pool)
@@ -546,7 +555,11 @@ def makeItBetter(X, y, X_test, y_test, current_train_indices, pool, number_trial
 
     return list(current_train_indices), set(pool)
 
-
+"""
+Mix the usage of strategy1 and strategy2, randomly, based on current_temperature.
+On beginning, strategy1 tend to be more used.
+temperature_step reduces current_temperature and it makes strategy2 to be more used than strategy1 later on.
+"""
 class SimulatedAnnealing(BaseStrategy):
 
     def __init__(self, strategy1=None, strategy2=None, inicial_temperature=.99, temperature_step=.01, seed=0):
@@ -558,6 +571,9 @@ class SimulatedAnnealing(BaseStrategy):
 
     def chooseNext(self, pool=None, X=None, model=None, k=1, current_train_indices = None, current_train_y = None):
         r = self.randgen.random()
+        """
+        Roll a dice, if true strategy1 is executed; otherwise strategy2
+        """
         if r < self.current_temperature:
             pass
             out = self.strategy1.chooseNext(pool, X, model, k, current_train_indices, current_train_y)
